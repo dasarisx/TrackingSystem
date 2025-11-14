@@ -29,8 +29,12 @@ Frontend: **Next.js** | Backend: **Node.js** | Database: **MongoDB**
 
 3. Create a .env file (based on .env.example) and configure:
    ```bash
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
+   PORT=5000
+   MONGODB_URI=mongodb://localhost:27017/VMS
+   JWT_SECRET=b2cd07b1624cbf0232efcf0864abadd959e3efe36f07e8f33f75ba9bb0121f7ff3cc6274a8da64aedf3fa59fc9aa689818a4d11823a8adf07845b37c9248e71f
+   NODE_ENV=development
+   ADMIN_USER=admin@gmail.com
+   ADMIN_PASSWORD=Admin@123
 
 4. Start the backend server:
    ```bash
