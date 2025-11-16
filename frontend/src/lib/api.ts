@@ -39,11 +39,9 @@ export const api = {
       method: 'DELETE'
     }),
     getById: (id: string) => apiFetch(`/issues/${id}`),
-    listCrewIssues: () => apiFetch('/issues/crew/issues'),
   },
   vessels: {
     list: () => apiFetch('/vessels'),
-    listCrewVessels: () => apiFetch('/vessels/crew/vessels'),
     create: (data: any) => apiFetch('/vessels', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -56,9 +54,10 @@ export const api = {
       method: 'DELETE'
     }),
     getById: (id: string) => apiFetch(`/vessels/${id}`),
-    runInspections: (id: string) => apiFetch(`/vessels/${id}/run-inspections`, {
-      method: 'POST'
-    }),
+    inspect: () => apiFetch('/vessels/inspect', {
+      method: 'POST',
+      body: JSON.stringify({})
+    }),    
   },  
   users: {
     list: () => apiFetch('/users'),

@@ -33,29 +33,16 @@ export default function IssueForm() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    console.log(authContext)
     if(authContext.user?.role === "Admin"){
       setRole(authContext.user?.role)
-      fetchIssues();
-    } else {
-      fetchCrewIssues();
     }
-    
+    fetchIssues();
     fetchVessels();
   }, []);
 
   const fetchIssues = async () => {
     try {
       const data = await api.issues.list();
-      setIssues(data);
-    } catch (error) {
-      console.error("Error fetching issues:", error);
-    }
-  };
-
-  const fetchCrewIssues = async () => {
-    try {
-      const data = await api.issues.listCrewIssues();
       setIssues(data);
     } catch (error) {
       console.error("Error fetching issues:", error);

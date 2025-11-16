@@ -8,6 +8,7 @@ import {
 	getVesselById,
 	updateVessel,
 	deleteVessel,
+	runInspection,
 } from '../controllers/vesselController';
 
 const router = express.Router();
@@ -26,6 +27,9 @@ router.put('/:id', protect, authorize("Admin"), updateVessel);
 
 // Delete vessel
 router.delete('/:id', protect, authorize("Admin"), deleteVessel);
+
+// Run Inspections
+router.post('/inspect', protect, authorize('Admin'), runInspection);
 
 export default router;    
 

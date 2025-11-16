@@ -23,11 +23,11 @@ export default function Navbar() {
     <nav className="bg-gray-900 text-white px-6 py-3 flex gap-6">
       
       <Link href="/issues">Issues</Link>
+      <Link href="/vessels">Vessels</Link>
       
       {/* Hide these for 'crew' and vessel*/}
       {authContext.user?.role !== "Crew" && (
-        <>          
-          <Link href="/vessels">Vessels</Link>
+        <>
           <Link href="/users">Users</Link>
         </>
       )}

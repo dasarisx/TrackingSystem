@@ -2,6 +2,36 @@ import { Request, Response } from 'express';
 import  Vessel from '../models/vessel';
 import { AuthRequest } from '../middlewares/authMiddleware';
 
+const fetchVessels = async (query: Record<string, any>) => {
+  return await Vessel.aggregate([
+      { $match: query },
+
+      // Lookup issues for each vessel
+      {
+        $lookup: {
+          from: "issues",           // collection name in MongoDB
+          localField: "_id",
+          foreignField: "vesselId",
+          as: "issues",
+        },
+      },
+
+      // Add field "issueCount" to vessel
+      {
+        $addFields: {
+          issueCount: { $size: "$issues" }
+        },
+      },
+
+      // Remove issues array (optional)
+      {
+        $project: {
+          issues: 0
+        }
+      }
+    ]);
+}
+
 export const createVessel = async (req: AuthRequest, res: Response) => {
   try {
     const { name, imo, flag, type, status } = req.body;
@@ -19,7 +49,13 @@ export const createVessel = async (req: AuthRequest, res: Response) => {
 
 export const getVessels = async (req: AuthRequest, res: Response) => {
   try {
-    const vessels = await Vessel.find();
+    let query = {}
+    if(req.user?.role === 'Crew'){
+      query = {_id: { $in: req.user?.assignedVesselIds }}
+    }
+    
+    const vessels = await fetchVessels(query);
+
     res.json(vessels);
   } catch (error: any) {
     console.error("Get Vessels error:", error);
@@ -75,6 +111,37 @@ export const deleteVessel = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: error.message || 'Server error' });
   }
 };
+
+export const runInspection = async (req: AuthRequest, res: Response) => {
+  try {
+    // Fetch vessels with issueCount
+    const vessels = await fetchVessels({});
+
+    // Update each vessel based on issueCount
+    for (const vessel of vessels) {
+      const updateData: any = {
+        lastInspectionDate: new Date(),
+      };
+
+      if (vessel.issueCount >= 3) {
+        updateData.status = "Maintenance";
+      }
+
+      await Vessel.updateOne(
+        { _id: vessel._id },
+        { $set: updateData }
+      );
+    }
+
+    // Fetch updated vessels again (optional)
+    const updatedVessels = await fetchVessels({});
+
+    res.json(updatedVessels);
+  } catch (error: any) {
+    console.error("Get Vessels error:", error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+}
 
 
 

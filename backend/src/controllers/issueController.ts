@@ -32,7 +32,11 @@ export const createIssue = async (req: AuthRequest, res: Response) => {
 
 export const getIssues = async (req: AuthRequest, res: Response) => {
   try {
-    const issues = await Issue.find().populate('vesselId', 'imo').populate('userId', 'email');    
+    let query = {}
+    if( req.user?.role !== 'Admin'){
+      query = {userId: req.user?._id}
+    }
+    const issues = await Issue.find(query).populate('vesselId', 'imo').populate('userId', 'email');    
     res.json(issues);
     } catch (error: any) {  
     res.status(500).json({message: error.message || 'Server error'});
@@ -84,26 +88,4 @@ export const getIssueById = async (req: AuthRequest, res: Response) => {
   } 
 };
 
-// Crew-specific endpoints
-export const getIssuesByCrew = async (req: AuthRequest, res: Response) => {
-  try {
-    const crewId = req.user!._id;
-    const issues = await Issue.find({userId: crewId})
-      .populate('vesselId', 'imo').populate('userId', 'email'); 
-    res.json(issues);
-  } catch (error: any) {
-    res.status(500).json({message: error.message || 'Server error'});
-  }
-};
-
-//crew-specific endpoint to get open issue count by vessel
-export const getOpenIssueCountByVessel = async (req: AuthRequest, res: Response) => {
-  try {
-    const vesselId = req.params.vesselId;
-    const openIssueCount = await Issue.countDocuments({vesselId, status: 'open'});
-    res.json({vesselId, openIssueCount});
-  } catch (error: any) {
-    res.status(500).json({message: error.message || 'Server error'});
-  }
-};
 

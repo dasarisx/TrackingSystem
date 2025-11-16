@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../lib/api";
 import { run } from "node:test";
+import { AuthContext } from "@/context/AuthContext";
 
 interface VesselFormState {
   name: string;
@@ -15,7 +16,9 @@ interface VesselFormState {
 
 export default function VesselForm() {
   const router = useRouter();
+  const [ role, setRole] = useState<string | null>(null)
   const [vessels, setVessels] = useState<any[]>([]);
+  const authContext = useContext(AuthContext);
   const [form, setForm] = useState<VesselFormState>({
     name: "",
     imo: "",
@@ -27,6 +30,11 @@ export default function VesselForm() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    console.log(authContext)
+    if(authContext.user?.role === "Admin"){
+      setRole(authContext.user?.role)
+      console.log(role)
+    }
     fetchVessels();
   }, []);
 
@@ -86,9 +94,38 @@ export default function VesselForm() {
     }
   };
 
+  const handleInspectVessel = async () => {
+    try {
+      const data = await api.vessels.inspect();
+      setVessels(data);
+    } catch (error) {
+      console.error("Error fetching vessels:", error);
+    }
+  }
+
   return (
     <div>
+      {role === "Admin" && (
       <div className="max-w-3xl w-full mx-auto mt-6 p-6 bg-white shadow rounded-lg">
+      {/* <h1 className="flex text-2xl font-bold justify-center">Add a New Vessel</h1>
+      <button
+          onClick={() => handleInspectVessel()}
+          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Run Inspection
+        </button> */}
+        <div className="relative flex items-center justify-between mb-4">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold">
+            Add a New Vessel
+          </h1>
+
+          <button
+            onClick={() => handleInspectVessel()}
+            className="ml-auto px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Run Inspection
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded">
@@ -140,20 +177,27 @@ export default function VesselForm() {
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Add Vessel
-            </button>
+            </button>            
           </div>
         </form>
       </div>
+      )}
 
       {/* Display Vessels */}
       <div className="max-w-5xl w-full mx-auto mt-6 p-6 bg-white shadow rounded-lg">
         <div className="mt-8">
-          <h2 className="flex justify-center text-xl font-bold mb-4">Added Vessels</h2>
+          <h2 className="flex justify-center text-xl font-bold mb-4">Vessels</h2>
           <div className="space-y-4">
             {vessels.map((vessel) => (
               <div
                 key={vessel._id}
                 className="border rounded p-4 bg-white shadow flex justify-between items-center"
+                className={`
+                  p-4 rounded-lg 
+                  ${vessel.status === "Active" ? "border-green-500" : ""}
+                  ${vessel.status === "Maintenance" ? "border-yellow-500" : ""}
+                  border-2
+                `}
               >
                 <div>
                   <h3 className="font-bold">{vessel.name}</h3>
@@ -161,8 +205,10 @@ export default function VesselForm() {
                   <p className="text-sm text-gray-600">Flag: {vessel.flag}</p>
                   <p className="text-sm text-gray-600">Type: {vessel.type}</p>
                   <p className="text-sm text-gray-500">Status: {vessel.status}</p>
-                  <p className="text-sm text-gray-500">Last Inspection: {vessel.lastInspectionDate ? new Date(vessel.lastInspectionDate).toLocaleDateString() : 'N/A'}</p>  
+                  <p className="text-sm text-gray-500">Issue Count: {vessel.issueCount}</p>
+                  <p className="text-sm text-gray-500">Last Inspection: {vessel.lastInspectionDate ? new Date(vessel.lastInspectionDate).toLocaleString("en-US", { hour12: false}) : 'N/A'}</p>  
                 </div>
+                {role === "Admin" && (
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(vessel._id)}
@@ -177,6 +223,7 @@ export default function VesselForm() {
                     Delete
                   </button>
                 </div>
+                )}
               </div>
             ))}
           </div>
